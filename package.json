@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "second task for backend intership fromm iiacademy",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-  "start": "node app.js",
-  "dev": "nodemon app.js"
+  "start": "node server.js",
+  "dev": "nodemon server.js"
 },
   "author": "Md. Mahfujur Rahman",
   "license": "ISC",
