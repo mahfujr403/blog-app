@@ -11,8 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 Database.connectDB();
-app.use('/api', blogRouter);
-app.use('/api', authRouter);
+app.use('/api/blog', blogRouter);
+app.use('/api/auth', authRouter);
 
 
 
