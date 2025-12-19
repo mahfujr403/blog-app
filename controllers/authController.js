@@ -97,8 +97,18 @@ auth.register = async (req, res) => {
 }
 
 
-auth.me = (req, res) => {
-  res.send('User profile');
+auth.me = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).select('name email createdAt');
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        return res.status(200).json({ user });
+        
+    } catch (error) {
+        console.error('Fetch user error:', error);
+        return res.status(500).json({ error: error.message });
+    }
 }
 
 export {auth};
