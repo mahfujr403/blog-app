@@ -4,38 +4,71 @@ import mongoose from "mongoose";
 const auth = {}
 
 
-const inputValidator = (data = {}) => {
+const inputValidator = (data = {}, requiredFields = ['email', 'password']) => {
     const errors = {};
 
-    const name = typeof data.name === 'string' ? data.name.trim() : '';
-    if (!name) {
-        errors.name = 'Name is required.';
-    } else if (name.length < 3) {
-        errors.name = 'Name must be at least 3 characters long.';
+    // Validate name if required
+    if (requiredFields.includes('name')) {
+        const name = typeof data.name === 'string' ? data.name.trim() : '';
+        if (!name) {
+            errors.name = 'Name is required.';
+        } else if (name.length < 3) {
+            errors.name = 'Name must be at least 3 characters long.';
+        }
     }
 
-    const email = typeof data.email === 'string' ? data.email.trim() : '';
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-        errors.email = 'Email is required.';
-    } else if (!emailPattern.test(email)) {
-        errors.email = 'Email must be valid.';
+    // Validate email if required
+    if (requiredFields.includes('email')) {
+        const email = typeof data.email === 'string' ? data.email.trim() : '';
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            errors.email = 'Email is required.';
+        } else if (!emailPattern.test(email)) {
+            errors.email = 'Email must be valid.';
+        }
     }
 
-    const password = typeof data.password === 'string' ? data.password.trim() : '';
-    if (!password) {
-        errors.password = 'Password is required.';
-    } else if (password.length < 6) {
-        errors.password = 'Password must be at least 6 characters long.';
+    // Validate password if required
+    if (requiredFields.includes('password')) {
+        const password = typeof data.password === 'string' ? data.password.trim() : '';
+        if (!password) {
+            errors.password = 'Password is required.';
+        } else if (password.length < 6) {
+            errors.password = 'Password must be at least 6 characters long.';
+        }
     }
 
-    return { valid: Object.keys(errors).length === 0, errors: errors };
+    return { valid: Object.keys(errors).length === 0, errors };
 };
 
  
 
-auth.login = (req, res) => {
-  res.send('User login');
+auth.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const { valid, errors } = inputValidator({ email, password });
+    if (!valid) {
+        return res.status(400).json({ errors: errors });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(400).json({ errors: { email: 'Email not found.' } });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+        return res.status(400).json({ errors: { password: 'Incorrect password.' } });
+    }
+    res.status(200).json({ 
+        message: 'Login successful', 
+        user: { name: user.name, email: user.email } });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
 }
 
 
@@ -43,9 +76,9 @@ auth.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        const { valid, errors } = inputValidator({ name, email, password });
+        const { valid, errors } = inputValidator({ name, email, password }, ['name', 'email', 'password']);
         if (!valid) {
-            return res.status(400).json({ errors: errors });
+            return res.status(400).json({ errors });
         }
 
         const existingUser = await User.findOne({ email });
