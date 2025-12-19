@@ -1,10 +1,15 @@
 import { Router } from "express";
+import { authentication } from "../middlewares/authMiddleware.js";
+import { blog } from "../controllers/blogController.js";
 
 const blogRouter = Router();
 
-// Sample route for getting all blog posts
-blogRouter.get('/blog', (req, res) => {
-  res.send('List of all blog posts');
-});
+blogRouter.post('/create', authentication.verifyUser, blog.createPost);
+blogRouter.get('/posts', blog.getAllPosts);
+
+
+
+
+
 
 export {blogRouter};

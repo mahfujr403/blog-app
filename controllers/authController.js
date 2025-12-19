@@ -35,7 +35,10 @@ const inputValidator = (data = {}, requiredFields = ['email', 'password']) => {
         }
     }
 
-    return { valid: Object.keys(errors).length === 0, errors };
+    return { 
+        valid: Object.keys(errors).length === 0, 
+        errors 
+    };
 };
 
  
@@ -104,7 +107,7 @@ auth.me = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         return res.status(200).json({ user });
-        
+
     } catch (error) {
         console.error('Fetch user error:', error);
         return res.status(500).json({ error: error.message });
