@@ -11,9 +11,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 Database.connectDB();
+
+app.use(express.json());
 app.use('/api/blog', blogRouter);
 app.use('/api/auth', authRouter);
-
 
 
 app.listen(PORT, ()=>{

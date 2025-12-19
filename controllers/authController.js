@@ -29,7 +29,7 @@ const inputValidator = (data = {}) => {
         errors.password = 'Password must be at least 6 characters long.';
     }
 
-    return { valid: Object.keys(errors).length === 0, errors };
+    return { valid: Object.keys(errors).length === 0, errors: errors };
 };
 
  
@@ -45,7 +45,7 @@ auth.register = async (req, res) => {
 
         const { valid, errors } = inputValidator({ name, email, password });
         if (!valid) {
-            return res.status(400).json({ errors });
+            return res.status(400).json({ errors: errors });
         }
 
         const existingUser = await User.findOne({ email });
@@ -55,11 +55,10 @@ auth.register = async (req, res) => {
 
         const newUser = new User({ name, email, password });
         await newUser.save();
-        res.status(201).send('User registered successfully');
-
-        
+        res.status(201).json({ message: 'User registered successfully', user: { name, email } });
     } catch (error) {
-        res.status(500).send('Server error');
+        console.error('Registration error:', error);
+        res.status(500).json({ error: error.message });
     }
 }
 
