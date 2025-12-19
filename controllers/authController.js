@@ -1,5 +1,5 @@
 import {User} from "../models/userModel.js";
-import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 const auth = {}
 
@@ -7,7 +7,6 @@ const auth = {}
 const inputValidator = (data = {}, requiredFields = ['email', 'password']) => {
     const errors = {};
 
-    // Validate name if required
     if (requiredFields.includes('name')) {
         const name = typeof data.name === 'string' ? data.name.trim() : '';
         if (!name) {
@@ -17,7 +16,6 @@ const inputValidator = (data = {}, requiredFields = ['email', 'password']) => {
         }
     }
 
-    // Validate email if required
     if (requiredFields.includes('email')) {
         const email = typeof data.email === 'string' ? data.email.trim() : '';
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,7 +26,6 @@ const inputValidator = (data = {}, requiredFields = ['email', 'password']) => {
         }
     }
 
-    // Validate password if required
     if (requiredFields.includes('password')) {
         const password = typeof data.password === 'string' ? data.password.trim() : '';
         if (!password) {
@@ -61,9 +58,13 @@ auth.login = async (req, res) => {
     if (!isMatch) {
         return res.status(400).json({ errors: { password: 'Incorrect password.' } });
     }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
     res.status(200).json({ 
         message: 'Login successful', 
-        user: { name: user.name, email: user.email } });
+        user: { name: user.name, email: user.email },
+        token : token
+    });
     
   } catch (error) {
     console.error('Login error:', error);
