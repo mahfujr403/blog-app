@@ -5,7 +5,8 @@ import { blog } from "../controllers/blogController.js";
 const blogRouter = Router();
 
 blogRouter.post('/create', authentication.verifyUser, blog.createPost);
-blogRouter.get('/posts', blog.getAllPosts);
+blogRouter.get('/', blog.getAllPosts);
+blogRouter.get('/:id', blog.getPostById);
 
 
 

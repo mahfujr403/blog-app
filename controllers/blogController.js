@@ -65,10 +65,48 @@ blog.createPost = async (req, res) => {
     }
 }
 
-blog.getAllPosts = (req, res) => {
-    // Logic to retrieve all blog posts
-    res.status(200).json({ posts: "no post yet" });
+blog.getAllPosts = async (req, res) => {
+    try {
+        const blogs = await Blog.find().select('title content _id');
+        res.status(200).json({
+            success: true,
+            count: blogs.length,
+            blogs: blogs
+        })
+        
+    } catch (error) {
+        console.error('Get all posts error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message 
+        });
+    }
 }
 
+
+blog.getPostById = async (req, res) =>{
+    try {
+        const {id} = req.params;
+        const blog = await Blog.findById(id).select('title content -_id')
+
+        if(!blog){
+            return  res.status(404).json({
+                success: false,
+                message: "Blog post not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            blog,
+        });
+        
+    } catch (error) {
+        console.error('Get post by ID error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message 
+        });
+    }
+}
 
 export { blog };
