@@ -202,5 +202,41 @@ blog.deletePost = async (req, res) =>{
     }
 }
 
+blog.searchBlog = async (req, res) => {
+    try {
+        const { keyword } = req.query;
+
+        if (!keyword) {
+            return res.status(400).json({
+                success: false,
+                message: "Search keyword is required"
+            });
+        }
+
+        const filter = {
+            $or: [
+                { title: { $regex: keyword, $options: 'i' } },
+                { content: { $regex: keyword, $options: 'i' } },
+                { category: { $regex: keyword, $options: 'i' } }
+            ]}
+
+        const blogs = await Blog.find(filter).select('title content category isPublished author');
+
+        res.status(200).json({
+            success: true,
+            count: blogs.length,
+            keyword: keyword,
+            blogs: blogs
+        });
+
+    } catch (error) {
+        console.error('Search error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message 
+        });
+    }
+}
+
 
 export { blog };
