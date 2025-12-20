@@ -46,13 +46,21 @@ blog.createPost = async (req, res) => {
             return res.status(400).json({ errors });
         }
 
-        const newPost = new Blog ({title, content, category, isPublished, author: req.userId});
+        const newPost = new Blog ({title, content, category, isPublished, author: req.userId})
         await newPost.save();
+
+        const postResponse = {
+            title: newPost.title,
+            content: newPost.content,
+            category: newPost.category,
+            isPublished: newPost.isPublished,
+            author: newPost.author
+        };
 
         res.status(201).json({ 
             success: true, 
             message: "Blog post created successfully", 
-            data: newPost 
+            data: postResponse 
         });
 
 
@@ -67,7 +75,7 @@ blog.createPost = async (req, res) => {
 
 blog.getAllPosts = async (req, res) => {
     try {
-        const blogs = await Blog.find().select('title content _id');
+        const blogs = await Blog.find().select('title content category isPublished author');
         res.status(200).json({
             success: true,
             count: blogs.length,
@@ -87,7 +95,7 @@ blog.getAllPosts = async (req, res) => {
 blog.getPostById = async (req, res) =>{
     try {
         const {id} = req.params;
-        const blog = await Blog.findById(id).select('title content -_id')
+        const blog = await Blog.findById(id).select('title content category isPublished author -_id')
 
         if(!blog){
             return  res.status(404).json({
@@ -99,7 +107,7 @@ blog.getPostById = async (req, res) =>{
             success: true,
             blog,
         });
-        
+
     } catch (error) {
         console.error('Get post by ID error:', error);
         res.status(500).json({
@@ -108,5 +116,91 @@ blog.getPostById = async (req, res) =>{
         });
     }
 }
+
+blog.updatePost = async (req, res) =>{
+    try {
+        const {id} = req.params;
+        const {userId} = req;
+
+        const { title, content, category, isPublished } = req.body;
+        const { isValid, errors } = inputValidator({ title, content, category, isPublished });
+
+        if (!isValid) {
+            return res.status(400).json({ errors });
+        }
+
+
+        const blog = await Blog.findById(id);
+        // console.log(blog);
+        if(blog.author.toString() !== userId){
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to update this blog post"
+            });
+        }
+
+        const updatedBlog = await Blog.findByIdAndUpdate(id, 
+            { title, content, category, isPublished }, 
+            { new: true }
+        ).select('title content category isPublished author');
+
+        if(!updatedBlog){
+            return  res.status(404).json({
+                success: false,
+                message: "Blog post not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Blog post updated successfully",
+            updatedBlog,
+        });
+        
+    } catch (error) {
+        console.error('Update post error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message 
+        });
+    }
+}
+
+blog.deletePost = async (req, res) =>{
+    try {
+        const {id} = req.params;
+
+        const blog = await Blog.findById(id);
+        if(blog.author.toString() !== userId){
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to delete this blog post"
+            });
+        }
+
+        const deletedBlog = await Blog.findByIdAndDelete(id);
+
+        if(!deletedBlog){
+            return  res.status(404).json({
+                success: false,
+                message: "Blog post not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Blog post deleted successfully",
+            deletedBlog,
+        });
+
+    } catch (error) {
+        console.error('Delete post error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message 
+        });
+    }
+}
+
 
 export { blog };
